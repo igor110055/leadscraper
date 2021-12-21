@@ -238,8 +238,6 @@ def parse_profiles(driver, profile_urls, XLX_OUTPUT_PATH, parse_start):
 		print("Company Info", company_link + " " + company_text + " "
 			+ industry + " " + str(num_employees) + " " + comp_city + ", " + comp_state)
 
-
-
 		profiles_data["First Name"].append(fname)
 		profiles_data["Last Name"].append(lname)
 		profiles_data["# Years in Current Role"].append(num_years)
