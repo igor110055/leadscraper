@@ -11,7 +11,7 @@ import time
 import re
 import pandas as pd
 
-#Usage: python TestScraper.py config.txt "https://www.linkedin.com/sales/search/people?savedSearchId=50514333&searchSessionId=s6wrupLLSaGniUeEj6Rp%2Fw%3D%3D" output/profile_list.txt output/profiles.xlsx 0
+#Usage: python TestScraper.py config.txt "https://www.linkedin.com/sales/search/people?REDACTED" output/profile_list.txt output/profiles.xlsx 0
 
 def main():
 	args = sys.argv[1:]
