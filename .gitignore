@@ -6,6 +6,9 @@ __pycache__/
 #Config
 config.txt
 
+#Output 
+output/
+
 # C extensions
 *.so
 
