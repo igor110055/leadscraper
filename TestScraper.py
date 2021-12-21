@@ -11,7 +11,7 @@ import time
 import re
 import pandas as pd
 
-#Usage: python TestScraper.py config.txt "https://www.linkedin.com/sales/search/people?savedSearchId=50514333&searchSessionId=s6wrupLLSaGniUeEj6Rp%2Fw%3D%3D" output/profile_list.txt output/profiles.xlsx
+#Usage: python TestScraper.py config.txt "https://www.linkedin.com/sales/search/people?savedSearchId=50514333&searchSessionId=s6wrupLLSaGniUeEj6Rp%2Fw%3D%3D" output/profile_list.txt output/profiles.xlsx 0
 
 def main():
 	args = sys.argv[1:]
@@ -20,14 +20,21 @@ def main():
 	LIST_LINK = args[1]
 	PROFILE_PATH = args[2]
 	XLX_OUTPUT_PATH = args[3]
-
+	parse_only, parse_start = False, 0
+	if len(args) == 5:
+		parse_only = True
+		parse_start = int(args[4])
 
 	start_time = time.time()
 	
 	driver = login(CONFIG_PATH)
-	#profile_urls = get_profile_urls(driver, LIST_LINK, PROFILE_PATH)
+	
+	if not parse_only:
+		profile_urls = get_profile_urls(driver, LIST_LINK, PROFILE_PATH)
+	
 	profile_urls = read_profile_urls(PROFILE_PATH)
-	parse_profiles(driver, profile_urls, XLX_OUTPUT_PATH)
+
+	parse_profiles(driver, profile_urls, XLX_OUTPUT_PATH, parse_start)
 
 	execution_time = (time.time() - start_time)
 	print('Execution time in seconds: ' + str(execution_time))
@@ -117,7 +124,7 @@ def get_profile_urls(driver, list_link, OUTPUT_PROFILE_PATH):
 
 	return profile_urls
 
-def parse_profiles(driver, profile_urls, XLX_OUTPUT_PATH):
+def parse_profiles(driver, profile_urls, XLX_OUTPUT_PATH, parse_start):
 	profiles_data = {}
 	profiles_data["First Name"] = []
 	profiles_data["Last Name"] = []
@@ -137,6 +144,10 @@ def parse_profiles(driver, profile_urls, XLX_OUTPUT_PATH):
 	
 
 	for idx, prof_url in enumerate(profile_urls):
+		if idx != parse_start:
+			continue
+		if idx >= parse_start + 500:
+			break
 		print("PROFILE {}".format(idx))
 		driver.get(prof_url)
 		name_div = driver.find_element_by_xpath('.//span[@class = "profile-topcard-person-entity__name t-24 t-black t-bold"]')
