@@ -5,6 +5,7 @@ __pycache__/
 
 #Config
 config.txt
+email_config.txt
 
 #Output 
 output/
