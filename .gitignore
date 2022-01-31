@@ -8,7 +8,7 @@ config.txt
 email_config.txt
 
 #Output 
-output/
+data/
 
 # C extensions
 *.so
