@@ -1,0 +1,22 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+import PIL
+from PIL import Image
+from api import TestScraper
+
+logo = Image.open("imgs/Logo.png")
+ll_ex = Image.open("imgs/lead_list_ex.png")
+
+st.image(logo, width = 200)
+st.title("LinkedIn Lead List Scraper")
+
+st.header("1. Profile Scraping from Lead List")
+st.image(ll_ex, width = 600)
+st.subheader("See Above Example - Copy & Paste Highlighted URL")
+
+ll_url = st.text_input("Enter Lead List URL")
+if ll_url != "":
+	st.text("Parsing Initiated...")
+
+

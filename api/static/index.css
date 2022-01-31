@@ -1,0 +1,250 @@
+@media only screen and (max-width: 768px) {
+    .contact {
+        width: 50% !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        position: relative !important;
+        margin-top: 20px !important;
+    }
+}
+
+.login {
+  text-align: center;
+  margin-top:  8vh;
+}
+
+.loginButton {
+  background: #7ae9ff;
+  border: none;
+  color: black;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+
+  font-family:  'Georgia', serif;
+  font-size:  18px;
+
+  cursor:pointer;
+}
+
+.loginButton:hover{
+  background:  #42d7f5;
+  transition: 0.2s all;
+}
+
+.loginButton:active{
+  background:  #00ffff;
+}
+
+.userTextInput {
+  height:  30px;
+  width:  200px;
+  background: #f0feff;
+}
+
+.page1 {
+  text-align: center;
+  margin-top:  8vh;
+}
+
+body {
+  background-color: #dbfbff;
+}
+
+img{
+  height: calc(40vh);
+  border: 5px solid black;
+}
+
+.header-img {
+  width:  100%;
+  height: 250px;
+  background: url('imgs/header.jpeg')  ;
+  background-size:  cover;
+}
+
+.lead-ex-img {
+  width:  100%;
+  height: 250px;
+  background: url('imgs/lead_list_ex.png')  ;
+}
+
+.h1 {
+  color: black;
+  font-family: 'Georgia', serif;
+  font-size:  40px;
+}
+
+.h2 {
+  color: black;
+  font-family: 'Georgia', serif;
+  font-size: 30px;
+}
+
+.p1 {
+  color: black;
+  font-family: 'Georgia', serif;
+  font-size: 25px;
+  text-align: left;
+}
+
+
+.p1 a: link{
+  color: black;
+  font-family: 'Georgia', serif;
+  font-size:  40px;
+}
+
+.p1 a:link {
+  color: black;
+}
+.p1 a:visited {
+  color: black;
+}
+.p1 a:hover {
+  color: gold;
+  transition:  0.2s all;
+}
+
+
+.p2 {
+  color: black;
+  font-family: 'Georgia', serif;
+  font-size: 20px;
+}
+
+ul {
+  list-style-type:  none;
+  margin:  0;
+  padding: 0;
+}
+
+.battery {
+  font-family:  'Georgia', serif;
+  font-size:  20px;
+}
+.battery:hover{
+  background-color:  #0072CE;
+  color:  white;
+  transition:  0.2s all;
+}
+.battery a:link {
+  color: black;
+}
+.battery a:visited {
+  color: black;
+}
+.battery a:hover {
+  color: lightblue;
+  transition: 0.2s all;
+}
+
+
+.vmware {
+  font-family:  'Georgia', serif;
+  font-size:  20px;
+}
+
+.vmware:hover{
+  background-color:  #0095D3;
+  color:  white;
+  transition: 0.2s all;
+}
+
+.vmware a:link {
+  color: black;
+}
+.vmware a:visited {
+  color: black;
+}
+.vmware a:hover {
+  color: aqua;
+  transition: 0.2s all;
+}
+
+.rise {
+  font-family:  'Georgia', serif;
+  font-size:  20px;
+}
+
+.rise:hover{
+  background-color:  #F7B614;
+  color:  white;
+  transition: 0.2s all;
+}
+.rise a:link {
+  color: black;
+}
+.rise a:visited {
+  color: black;
+}
+.rise a:hover {
+  color: yellow;
+  transition: 0.2s all;
+}
+
+.resumeButton {
+  background: #7ae9ff;
+  border: none;
+  color: black;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+
+  font-family:  'Georgia', serif;
+  font-size:  18px;
+
+  cursor:pointer;
+}
+
+.resumeButton:hover{
+  background:  #42d7f5;
+  transition: 0.2s all;
+}
+
+.resumeButton:active{
+  background:  #00ffff;
+}
+
+.contact{
+  display: flex;
+  width:  15%;
+  position: absolute;
+  left:  calc(50% - 7.5%);
+  margin:  auto;
+  justify-content: center;
+}
+
+.contact a{
+  width: 30px;
+  height:30px;
+  display: inline-block;
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  background-color: white;
+}
+
+.contact a:hover{
+  opacity:  0.5;
+  transition-delay: 0.2s all;
+}
+
+.contact>#linkedin{
+  background:  url('assets/linkedin.png') no-repeat;
+  background-size:  30px 30px;
+  flex: 0.33;
+}
+
+.contact>#email{
+  background:  url('assets/email.png') no-repeat 50% 50%;
+  background-size:  30px 30px;
+  flex: 0.33;
+}
+
+.contact>#github{
+  background:  url('assets/github.png') no-repeat 50% 50%;
+  background-size:  30px 30px;
+  flex: 0.33;
+}

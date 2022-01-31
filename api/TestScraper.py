@@ -14,6 +14,8 @@ import pandas as pd
 import json
 import requests
 import nltk
+import flask
+from flask import request
 
 #Usage - End to End
 # python TestScraper.py config.txt "https://www.linkedin.com/sales/search/REDACTED" output/profile_list.txt output/profiles.xlsx 0 output/profiles_data.txt ROCKET_API_KEY VERIFY_API_KEY
@@ -23,7 +25,17 @@ import nltk
 
 #Usage - Just Email Lookup/Verification
 # python TestScraper.py config.txt "None" output/profile_list.txt output/profiles.xlsx -1 output/profiles_data.txt ROCKET_API_KEY VERIFY_API_KEY
+from flask import Flask, render_template
+app = Flask(__name__, static_url_path="", static_folder="static")
+cache = Cache(app)
 
+
+mainDriver = None
+profile_urls = None
+
+@app.route('/')
+def index():
+    return flask.render_template('index.html')
 
 def main():
 	args = sys.argv[1:]
@@ -36,7 +48,7 @@ def main():
 	PROFILE_DATA_PATH = args[5]
 	ROCKET_KEY = args[6]
 	VERIFY_KEY = args[7]
-
+	print(LIST_LINK)
 	retrieve_profiles = (LIST_LINK != "NONE")
 
 	start_time = time.time()
@@ -75,9 +87,6 @@ def main():
 
 	execution_time = (time.time() - start_time)
 	print('Execution time in seconds: ' + str(execution_time))
-	
-	
-
 
 def read_config(CONFIG_PATH):
 	lines = open(CONFIG_PATH).readlines()
@@ -92,9 +101,12 @@ def read_profile_urls(PROFILE_PATH):
 		profile_urls.append(line)
 	return profile_urls
 
-def login(CONFIG_PATH):
-	user, pw = read_config(CONFIG_PATH)
 
+def login():
+	print(request.form)
+	user = request.form.get('user')
+	pw = request.form.get('pw')
+	print(user, pw)
 	chrome_options = webdriver.ChromeOptions()
 	chrome_options.add_argument("--start-maximized")
 	chrome_options.add_argument("--disable-gpu")
@@ -109,24 +121,32 @@ def login(CONFIG_PATH):
 	WebDriverWait(driver, 5).until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR,".authentication-iframe")))
 	driver.find_element_by_css_selector('#username').send_keys(user)
 	driver.find_element_by_css_selector('#password').send_keys(pw)
+	button = driver.find_element_by_css_selector('.login__form_action_container>button')
+
+	print("found:", button)
+	button.click()
 	print("LOGGED IN")
 	time.sleep(10)
-	return driver
+	mainDriver = driver
+	return 'login'
 
-def get_profile_urls(driver, list_link, OUTPUT_PROFILE_PATH):
-	driver.get(list_link);
+@app.route('/get_profiles/', methods = ["POST"])
+def get_profile_urls():
+	login()
+	list_link = request.form.get('list_link')
+	mainDriver.get(list_link);
 	idx = 2
 	profile_urls = []
 	buttons = []
-	while True:
-		driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+	while idx <= 50:
+		mainDriver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 		y = 1000
 		for timer in range(0,7):
-			driver.execute_script("window.scrollTo(0, "+str(y)+")")
+			mainDriver.execute_script("window.scrollTo(0, "+str(y)+")")
 			y += 1000  
 			time.sleep(1)
 
-		divs = driver.find_elements_by_class_name('result-lockup__name')
+		divs = mainDriver.find_elements_by_class_name('result-lockup__name')
 
 		for div in divs:
 			url = div.find_element_by_css_selector('a').get_attribute('href')
@@ -147,12 +167,7 @@ def get_profile_urls(driver, list_link, OUTPUT_PROFILE_PATH):
 	
 	print("Total # Profiles to Scrape", len(profile_urls))
 
-	file = open(OUTPUT_PROFILE_PATH, 'w')
-	for elem in profile_urls:
-		file.write(elem + "\n")
-	file.close()
-
-	return profile_urls
+	return "Finished"
 
 def parse_profiles(driver, profile_urls, XLX_OUTPUT_PATH, parse_start, profile_data, PROFILE_DATA_PATH):
 	profiles_data = {}
@@ -336,4 +351,5 @@ def load_excel(profiles_data, XLX_OUTPUT_PATH):
 	profiles_df.to_excel(XLX_OUTPUT_PATH, index = False)
 
 if __name__ == "__main__":
-    main()
+	app.run(host='0.0.0.0', port=5001)
+    #main()

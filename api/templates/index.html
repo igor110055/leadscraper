@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href = "../static/index.css">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+$(document).ready(function(){
+  $("#login").click(function(e){
+  	e.preventDefault();
+    $("#loginPage").hide();
+    $("#page1").show();
+    $.post("/login", {'user':$("#user").val(), 'pw':$("#pw").val()});
+	});
+	$("#profile_parse").click(function(e){
+  	e.preventDefault();
+    $("#loginPage").hide();
+    //$("#page1").hide();
+    //$("#page2").show()
+    var data = $.post("/get_profiles", {'list_link':$("#list_link_input").val()})
+    	.done(function ( data) {
+    		console.log(data);
+    		console.log(data.responseText);
+    		$('#download_profiles').show();
+    		$('#topage2').show()
+    		$('#download_profiles').click(function(e){
+					e.preventDefault();
+			    const textToBLOB = new Blob([data], { type: 'text/plain' });
+			    const sFileName = 'formData.txt';	   // The file to save the data.
+
+			    let newLink = document.createElement("a");
+			    newLink.download = sFileName;
+
+			    if (window.webkitURL != null) {
+			        newLink.href = window.webkitURL.createObjectURL(textToBLOB);
+			    }
+			    else {
+			        newLink.href = window.URL.createObjectURL(textToBLOB);
+			        newLink.style.display = "none";
+			        document.body.appendChild(newLink);
+			    }
+			    newLink.click();
+			});
+    });
+	});
+
+	$("#topage2").click(function(e){
+  	e.preventDefault();
+    $("#loginPage").hide();
+    $("#page1").hide();
+    $('#page2').show();
+	});
+
+	$("#profile_scrape").click(function(e){
+  	e.preventDefault();
+  	const profile_list = document.getElementById('url_list_input').files[0];
+  	console.log(profile_list);
+  	let formData = new FormData();
+  	formData.append("profile_list", profile_list);
+  	formData.append("profile_idx", $("#profile_idx").val());
+  	formData.append("ROCKET_KEY", $("#rocket_key").val());
+  	formData.append("VERIFY_KEY", $("#verify_key").val());
+  	fetch('/scrape_profiles', {
+  		method: "POST",
+  		body: formData
+  	})
+  		.then(function (data) {
+  			console.log(data);
+  			$('#xlx_download').show();
+  		})
+	});
+
+});
+</script>
+</head>
+
+<header>
+	<div class = "header-img"></div>
+</header>
+
+<body>
+<div class = "login" id = "loginPage">
+	<h1 class = "h1"> LinkedIn Sales Navigator Lead List Scraper </h1>
+	<p class = "p1" style = "font-weight:bold;text-align:center"> Enter Sales Nav Login Credentials </p>
+	<label for = "user" style = "font-weight: bold;font-size: 120%;font-family: 'Georgia', serif;"> Username </label>
+	<input type = "text" value="aneil@battery.com"  class = "userTextInput" id = "user" name = "fname">
+	<br><br>
+	<label for = "pw" style = "font-weight: bold;font-size: 120%;font-family: 'Georgia', serif;"> Password </label>
+	<input type = "password" value = "Growthinvestor1" class = "userTextInput" id = "pw" name = "fname"><br><br>
+	<button id = "login" class = "loginButton" text = "Login"> Login </button>
+</div>
+
+<div class = "page1" id = "page1" style="display:none">
+	<h1 class = "h1"> LinkedIn Sales Nav Lead List Scraper </h1>
+	<p class = "p1" style = "font-weight:bold">
+		Step 1: Lead List Profile Extraction
+		<!-- <a class = "b" href = "http://met.berkeley.edu">  </a> -->
+		<p style = "font-size:130%;text-align:left"> Enter the URL of your lead list - see below example. </p>
+		<img src = '../static/imgs/lead_list_ex.png' style = 'width:90%;height:40%'></img>
+		<br><br>
+		<label for = "list_link_input" style = "font-weight: bold;font-size: 120%;font-family: 'Georgia', serif;"> Lead List Link Input </label>
+		<input type = "text" value = "https://www.linkedin.com/sales/search/people?savedSearchId=50514333&searchSessionId=zfI%2F5jnPSQCCW7TRpgy9Sg%3D%3D" class = "userTextInput" id = "list_link_input" name = "fname"><br><br>
+		<button id = "profile_parse" class = "loginButton" text = "Login"> Parse Profiles </button>
+		<br><br>
+		<button style = "display: none" id = "download_profiles" class = "loginButton" text = "Download URLs"> Download Profile URL List </button>
+		<br><br>
+		<button style = "position: fixed; bottom: 20px; right: 20px;" id = "topage2" class = "loginButton" text = "Move to page 2"> Next Step </button>
+	</p>
+</div>
+
+<div class = "page2" id = "page2" style = "display:none">
+	<h1 class = "h1"> LinkedIn Sales Nav Lead List Scraper </h1>
+	<p class = "p1" style = "font-weight:bold">
+		Step 2: Profile Data Extraction
+		<br><br>
+		<label for = "url_list_input" style = "font-weight: bold;font-size: 80%;font-family: 'Georgia', serif;"> Upload Profile URL List </label>
+		<input type = "file" id = "url_list_input">
+
+		<label for = "profile_idx" style = "font-weight: bold;font-size: 80%;font-family: 'Georgia', serif;"> Enter Profile Index </label>
+		<input style = "width: 10%" type = "text" value = "0" class = "userTextInput" id = "profile_idx"> 
+
+		<br><br>  
+		<label for = "rockey_key" style = "font-weight: bold;font-size: 80%;font-family: 'Georgia', serif;"> Enter Rocket Reach Key </label>
+		<input style = "width: 10%" type = "password" value = "75407k6c61c5895ff895ac57a9f733778130a3" class = "userTextInput" id = "rocket_key">
+
+		<label for = "verify_key" style = "font-weight: bold;font-size: 80%;font-family: 'Georgia', serif;position:relative; right: -80px">Enter Email-Verify Key </label>
+		<input style = "width: 10%;position:relative; right: -85px" type = "password" value = "b3YYZnnVncA0iY9JgfwrI64q0V4kTPXGmOT466R5aLSFGtzQEp" class = "userTextInput" id = "verify_key">
+		<br><br>
+		<button id = "profile_scrape" class = "loginButton"> Scrape Profiles </button>
+		<br><br>
+		<a style = "font-size:  60%; display: none" href = "{{ url_for('download_profiles') }}" id = "xlx_download"> Download Profile Data (Excel) </a>
+		<br><br>
+	</p>
+</div>
+
+</body>
