@@ -38,11 +38,10 @@ def store_login():
 def scrape_profile_links():
 	lead_list_link = request.form.get("list_link")
 	print(lead_list_link)
-	app.logger.info(lead_list_link)
 	driver.get_profile_urls(lead_list_link)
 	profile_list = driver.get_profile_list()
 	print("REACHED", profile_list)
-	textfile = open("../data/test_output/profile_list.txt", "w")
+	textfile = open("./data/test_output/profile_list.txt", "w")
 	for prof in profile_list:
 	    textfile.write(prof + "\n")
 	textfile.close()
@@ -79,9 +78,11 @@ def download_profiles():
 	profile_data = driver.get_profile_data()
 	
 	profiles_df = pd.DataFrame.from_dict(profile_data)
-	profiles_df.to_excel("../data/test_output/profile_data.xlsx", index = False)
+	profiles_df = profiles_df.drop_duplicates(subset='Name', keep="first")
+	profiles_df.to_excel("./data/test_output/profile_data.xlsx", index = False)
 	
 	try:
+		print(sys.path)
 		return send_file("../data/test_output/profile_data.xlsx", attachment_filename = "profile_data.xlsx", as_attachment = True)
 	except Exception as e:
 		return str(e)

@@ -17,6 +17,9 @@ import nltk
 import flask
 from flask import request
 
+#Hummingbird usage
+#python TestScraper.py config.txt "LINK" ../data/hummingbird_output/profile_list.txt ../data/hummingbird_output/profiles.xlsx 0 ../data/hummingbird_output/profiles_data.txt 
+
 #Usage - End to End
 # python TestScraper.py config.txt "https://www.linkedin.com/sales/search/REDACTED" output/profile_list.txt output/profiles.xlsx 0 output/profiles_data.txt ROCKET_API_KEY VERIFY_API_KEY
 
@@ -25,17 +28,10 @@ from flask import request
 
 #Usage - Just Email Lookup/Verification
 # python TestScraper.py config.txt "None" output/profile_list.txt output/profiles.xlsx -1 output/profiles_data.txt ROCKET_API_KEY VERIFY_API_KEY
-from flask import Flask, render_template
-app = Flask(__name__, static_url_path="", static_folder="static")
-cache = Cache(app)
 
-
-mainDriver = None
+driver = None
 profile_urls = None
 
-@app.route('/')
-def index():
-    return flask.render_template('index.html')
 
 def main():
 	args = sys.argv[1:]
@@ -46,44 +42,51 @@ def main():
 	XLX_OUTPUT_PATH = args[3]
 	parse_start = int(args[4])
 	PROFILE_DATA_PATH = args[5]
-	ROCKET_KEY = args[6]
-	VERIFY_KEY = args[7]
+	ROCKET_KEY = "75407k6c61c5895ff895ac57a9f733778130a3"
+	VERIFY_KEY = "b3YYZnnVncA0iY9JgfwrI64q0V4kTPXGmOT466R5aLSFGtzQEp"
 	print(LIST_LINK)
-	retrieve_profiles = (LIST_LINK != "NONE")
+	retrieve_profiles = (LIST_LINK != "None")
 
 	start_time = time.time()
 	
-	driver = None
-	
-	profile_urls = None
-	if not retrieve_profiles:
-		driver = login(CONFIG_PATH)
-		profile_urls = get_profile_urls(driver, LIST_LINK, PROFILE_PATH)
-	else:
-		print("NO URL RETRIEVAL!")
-		profile_urls = read_profile_urls(PROFILE_PATH)
-
+	#driver = login(CONFIG_PATH)
+	#profile_urls = get_profile_urls(driver, LIST_LINK, PROFILE_PATH)
 	profiles_data = None
-	if parse_start != -1:
-		profiles_data = None
-		if parse_start > 0:
-			with open(PROFILE_DATA_PATH) as datafile:
-				profiles_data = json.loads(datafile.read())
-		if driver == None:
-			driver = login(CONFIG_PATH)
-		profiles_data = parse_profiles(driver, profile_urls, XLX_OUTPUT_PATH, parse_start, profiles_data, PROFILE_DATA_PATH)
-	else:
-		print("NO PARSES!")
-		print(PROFILE_DATA_PATH)
+	if parse_start >= 0:
 		with open(PROFILE_DATA_PATH) as datafile:
 			profiles_data = json.loads(datafile.read())
+	profile_urls = read_profile_urls(PROFILE_PATH)
+	print(len(profile_urls), len(profiles_data))
+	#profiles_data = parse_profiles(driver, profile_urls, XLX_OUTPUT_PATH, parse_start, profiles_data, PROFILE_DATA_PATH)
+	profiles_data = verify_emails(profiles_data, ROCKET_KEY, VERIFY_KEY, PROFILE_DATA_PATH, parse_start)
+	load_excel(profiles_data, XLX_OUTPUT_PATH)
+	
 
-	if driver:
-		driver.close()
+	# else:
+	# 	print("NO URL RETRIEVAL!")
+	# 	profile_urls = read_profile_urls(PROFILE_PATH)
 
-	profiles_data_email = verify_emails(profiles_data, ROCKET_KEY, VERIFY_KEY, PROFILE_DATA_PATH)
+	# profiles_data = None
+	# if parse_start != -1:
+	# 	profiles_data = None
+	# 	if parse_start > 0:
+	# 		with open(PROFILE_DATA_PATH) as datafile:
+	# 			profiles_data = json.loads(datafile.read())
+	# 	if driver == None:
+	# 		driver = login(CONFIG_PATH)
+	# 	profiles_data = parse_profiles(driver, profile_urls, XLX_OUTPUT_PATH, parse_start, profiles_data, PROFILE_DATA_PATH)
+	# else:
+	# 	print("NO PARSES!")
+	# 	print(PROFILE_DATA_PATH)
+	# 	with open(PROFILE_DATA_PATH) as datafile:
+	# 		profiles_data = json.loads(datafile.read())
 
-	load_excel(profiles_data_email, XLX_OUTPUT_PATH)
+	# if driver:
+	# 	driver.close()
+
+	# profiles_data_email = verify_emails(profiles_data, ROCKET_KEY, VERIFY_KEY, PROFILE_DATA_PATH)
+
+	# load_excel(profiles_data_email, XLX_OUTPUT_PATH)
 
 	execution_time = (time.time() - start_time)
 	print('Execution time in seconds: ' + str(execution_time))
@@ -102,11 +105,9 @@ def read_profile_urls(PROFILE_PATH):
 	return profile_urls
 
 
-def login():
-	print(request.form)
-	user = request.form.get('user')
-	pw = request.form.get('pw')
-	print(user, pw)
+def login(CONFIG_PATH):
+	user, pw = read_config(CONFIG_PATH)
+
 	chrome_options = webdriver.ChromeOptions()
 	chrome_options.add_argument("--start-maximized")
 	chrome_options.add_argument("--disable-gpu")
@@ -115,7 +116,7 @@ def login():
 	chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
 	chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
 	chrome_options.add_experimental_option('useAutomationExtension', False)
-	driver = webdriver.Chrome(options=chrome_options,executable_path="./chromedriver")
+	driver = webdriver.Chrome(options=chrome_options,executable_path="./chromedriver_98")
 	driver.get("https://www.linkedin.com/sales/login")
 	time.sleep(1)
 	WebDriverWait(driver, 5).until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR,".authentication-iframe")))
@@ -127,18 +128,14 @@ def login():
 	button.click()
 	print("LOGGED IN")
 	time.sleep(10)
-	mainDriver = driver
-	return 'login'
+	return driver
 
-@app.route('/get_profiles/', methods = ["POST"])
-def get_profile_urls():
-	login()
-	list_link = request.form.get('list_link')
-	mainDriver.get(list_link);
+def get_profile_urls(mainDriver, LIST_LINK, PROFILE_PATH):
+	mainDriver.get(LIST_LINK);
 	idx = 2
 	profile_urls = []
 	buttons = []
-	while idx <= 50:
+	while idx <= 100:
 		mainDriver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 		y = 1000
 		for timer in range(0,7):
@@ -154,17 +151,22 @@ def get_profile_urls():
 
 		print(idx)
 		button = None
-
 		try:
-			button = driver.find_element_by_xpath('//button[@data-page-number="{}"]'.format(idx))
+			button = mainDriver.find_element_by_xpath('//button[@data-page-number="{}"]'.format(idx))
 		except:
+			print("Button not found!")
 			break
-
 		button.click()
 		time.sleep(3)
+		print(profile_urls[-1])
 		print("# Profiles", len(profile_urls))
 		idx += 1
 	
+	with open(PROFILE_PATH, 'w') as f:
+		for url in profile_urls:
+			f.write(url + "\n")
+
+
 	print("Total # Profiles to Scrape", len(profile_urls))
 
 	return "Finished"
@@ -194,10 +196,12 @@ def parse_profiles(driver, profile_urls, XLX_OUTPUT_PATH, parse_start, profile_d
 		print("INDEX", idx)
 		if idx < parse_start:
 			continue
-		if idx >= (parse_start + 250):
+		if idx >= (parse_start + 600):
 			break
+
 		print("PROFILE {}".format(idx))
 		driver.get(prof_url)
+		time.sleep(1)
 		name_div = driver.find_element_by_xpath('.//span[@class = "profile-topcard-person-entity__name t-24 t-black t-bold"]')
 		name = name_div.text
 		print("Name", name)
@@ -208,6 +212,7 @@ def parse_profiles(driver, profile_urls, XLX_OUTPUT_PATH, parse_start, profile_d
 		print("Title", title)
 
 		time_div = driver.find_element_by_xpath('.//span[@class = "profile-topcard__time-period-bullet"]')
+		time.sleep(1.5)
 		num_years = time_div.text
 		print("# Years", num_years)
 
@@ -255,24 +260,36 @@ def parse_profiles(driver, profile_urls, XLX_OUTPUT_PATH, parse_start, profile_d
 		industry, num_employees, comp_city, comp_state = "","","",""
 		if company_link != "":
 			driver.get(company_link)
-			time.sleep(1.5)
-			industry_div = driver.find_element_by_xpath('.//div[@class = "t-14"]')
-			industry_raw = industry_div.text
-			industry = industry_raw.split("·")[0]
+			time.sleep(2)
+			industry_div = None
+			while industry_div is None:
+				try:
+					industry_div = driver.find_element_by_xpath('.//div[@class = "t-14"]')
+					industry_raw = industry_div.text
+					industry = industry_raw.split("·")[0]
+				except:
+					time.sleep(2)
+					pass
 
-			num_employees_div = driver.find_element_by_xpath('.//a[@class = "ember-view link-without-visited-and-hover-state"]')
-			is_thousand = "K" in num_employees_div.text
+			time.sleep(3.5)
+			try:
+				num_employees_div = driver.find_element_by_xpath('.//a[@class = "ember-view link-without-visited-and-hover-state"]')
+			except:
+				num_employees_div = None
+				comp_loc = None
 
-			num_employees = float(re.sub("[^\d.]+", "", num_employees_div.text))
-			if is_thousand: num_employees *= 1000
-			num_employees = int(num_employees)
-			comp_loc_div = driver.find_element_by_xpath('.//div[@class = "t-12 t-black--light"]')
-			comp_loc = comp_loc_div.text
-			comp_city, comp_state = "", ""
-			if "," in comp_loc:
-				text = comp_loc.split(",")
-				comp_city = text[0]
-				comp_state = text[1]
+			if num_employees_div != None:
+				is_thousand = "K" in num_employees_div.text
+				num_employees = float(re.sub("[^\d.]+", "", num_employees_div.text))
+				if is_thousand: num_employees *= 1000
+				num_employees = int(num_employees)
+				comp_loc_div = driver.find_element_by_xpath('.//div[@class = "t-12 t-black--light"]')
+				comp_loc = comp_loc_div.text
+				comp_city, comp_state = "", ""
+				if "," in comp_loc:
+					text = comp_loc.split(",")
+					comp_city = text[0]
+					comp_state = text[1]
 
 
 		print("Company Info", company_link + " " + company_text + " "
@@ -310,16 +327,28 @@ def parse_profiles(driver, profile_urls, XLX_OUTPUT_PATH, parse_start, profile_d
 	return profiles_data
 
 
-def verify_emails(profiles_data, ROCKET_KEY, VERIFY_KEY, PROFILE_DATA_PATH):
+def verify_emails(profiles_data, ROCKET_KEY, VERIFY_KEY, PROFILE_DATA_PATH, parse_start):
 	names = profiles_data["Name"]
 	companies = profiles_data["Current Company"]
 	#Rocket Reach - Email Lookup
 	rocket_url = "https://api.rocketreach.co/v2/api/lookupProfile"
 	rocket_headers = {"Api-Key": ROCKET_KEY}
-
-	emails, verifies = [], []
+	#print(profiles_data['Email'].index('ricardo.king@promedica.org'))
+	#return
+	emails, verifies = profiles_data['Email'], profiles_data['Email Verified? Yes/No']
+	#print(len(emails), len(verifies), len(names), len(companies) )
+	print(len(emails), emails[-1], verifies[-1], names[-1])
+	#print(parse_start)
+	#return	
+	#Check for padding sizes
 	for idx, (name, company) in enumerate(zip(names, companies)):
 		#Lookup Email
+		if idx < parse_start:
+			print(idx, parse_start, names[idx], emails[idx], verifies[idx])
+			continue
+		#else:
+		#	print("START", idx, names[idx], emails[idx], verifies[idx])
+		#	return
 		rock_r = requests.get(rocket_url, data = {"name":name, "current_employer":company}, headers = rocket_headers)
 		data = rock_r.json()
 		email = ""
@@ -335,14 +364,14 @@ def verify_emails(profiles_data, ROCKET_KEY, VERIFY_KEY, PROFILE_DATA_PATH):
 				verified = "Yes"
 		
 		print(idx, name, company, email, verified)
-		emails.append(email)
-		verifies.append(verified)
+		emails[idx] = email
+		verifies[idx] = verified
 
-	profiles_data["Email"] = emails
-	profiles_data["Email Verified? Yes/No"] = verifies
+		profiles_data["Email"] = emails
+		profiles_data["Email Verified? Yes/No"] = verifies
 
-	with open(PROFILE_DATA_PATH, 'w') as convert_file:
-		convert_file.write(json.dumps(profiles_data))
+		with open(PROFILE_DATA_PATH, 'w') as convert_file:
+			convert_file.write(json.dumps(profiles_data))
 
 	return profiles_data
 
@@ -351,5 +380,4 @@ def load_excel(profiles_data, XLX_OUTPUT_PATH):
 	profiles_df.to_excel(XLX_OUTPUT_PATH, index = False)
 
 if __name__ == "__main__":
-	app.run(host='0.0.0.0', port=5001)
-    #main()
+	main()

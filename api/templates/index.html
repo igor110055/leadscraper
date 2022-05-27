@@ -16,6 +16,8 @@ $(document).ready(function(){
 	$("#profile_parse").click(function(e){
   	e.preventDefault();
     $("#loginPage").hide();
+    $('#download_profiles').hide();
+    $("#progress_bar").show();
     //$("#page1").hide();
     //$("#page2").show()
     var data = $.post("/get_profiles", {'list_link':$("#list_link_input").val()})
@@ -24,6 +26,7 @@ $(document).ready(function(){
     		console.log(data.responseText);
     		$('#download_profiles').show();
     		$('#topage2').show()
+    		$("#progress_bar").hide();
     		$('#download_profiles').click(function(e){
 					e.preventDefault();
 			    const textToBLOB = new Blob([data], { type: 'text/plain' });
@@ -54,6 +57,7 @@ $(document).ready(function(){
 
 	$("#profile_scrape").click(function(e){
   	e.preventDefault();
+  	$("#progress_bar2").show()
   	const profile_list = document.getElementById('url_list_input').files[0];
   	console.log(profile_list);
   	let formData = new FormData();
@@ -68,6 +72,7 @@ $(document).ready(function(){
   		.then(function (data) {
   			console.log(data);
   			$('#xlx_download').show();
+  			$("#progress_bar2").hide()
   		})
 	});
 
@@ -103,6 +108,7 @@ $(document).ready(function(){
 		<input type = "text" value = "https://www.linkedin.com/sales/search/people?savedSearchId=50514333&searchSessionId=zfI%2F5jnPSQCCW7TRpgy9Sg%3D%3D" class = "userTextInput" id = "list_link_input" name = "fname"><br><br>
 		<button id = "profile_parse" class = "loginButton" text = "Login"> Parse Profiles </button>
 		<br><br>
+		<img src = "../static/imgs/progress_bar.gif" id = "progress_bar" style = "display: none; width:10%; height: 10%"></img>
 		<button style = "display: none" id = "download_profiles" class = "loginButton" text = "Download URLs"> Download Profile URL List </button>
 		<br><br>
 		<button style = "position: fixed; bottom: 20px; right: 20px;" id = "topage2" class = "loginButton" text = "Move to page 2"> Next Step </button>
@@ -129,6 +135,7 @@ $(document).ready(function(){
 		<br><br>
 		<button id = "profile_scrape" class = "loginButton"> Scrape Profiles </button>
 		<br><br>
+		<img src = "../static/imgs/progress_bar.gif" id = "progress_bar2" style = "display: none; width:10%; height: 10%"></img>
 		<a style = "font-size:  60%; display: none" href = "{{ url_for('download_profiles') }}" id = "xlx_download"> Download Profile Data (Excel) </a>
 		<br><br>
 	</p>

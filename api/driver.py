@@ -67,10 +67,12 @@ class Driver:
 		chrome_options.add_argument("--start-maximized")
 		chrome_options.add_argument("--disable-gpu")
 		chrome_options.add_argument("--no-sandbox")
+		##chrome_options.add_argument('--headless')
 		chrome_options.add_argument("--disable-notifications")
 		chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
 		chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
 		chrome_options.add_experimental_option('useAutomationExtension', False)
+		#driver = webdriver.Chrome(options=chrome_options,executable_path="/usr/bin/chromedriver")
 		driver = webdriver.Chrome(options=chrome_options,executable_path="./chromedriver")
 		driver.get("https://www.linkedin.com/sales/login")
 		time.sleep(1)
@@ -78,8 +80,7 @@ class Driver:
 		driver.find_element_by_css_selector('#username').send_keys(self.user)
 		driver.find_element_by_css_selector('#password').send_keys(self.pw)
 		button = driver.find_element_by_css_selector('.login__form_action_container>button')
-
-		print("found:", button)
+		print(button)
 		button.click()
 		print("LOGGED IN")
 		time.sleep(10)
@@ -90,39 +91,41 @@ class Driver:
 		return self.user, self.pw
 
 	def get_profile_urls(self, list_link):
-		self.login()
-		print("LOGGED IN!")
+		print(self.login())
+		print("Parsing URLs")
 		self.list_link = list_link
-		self.sel_driver.get(list_link);
+		print(self.list_link)
+		self.sel_driver.get(list_link)
+		time.sleep(5)
 		idx = 2
 		self.profile_urls = []
 		buttons = []
-		while idx <= 50:
-			self.sel_driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+		while idx <= 150:
+
+			#self.sel_driver.execute_script("window.scrollTo(0, document.body.scrollHeight*100);")
 			y = 1000
 			for timer in range(0,7):
-				self.sel_driver.execute_script("window.scrollTo(0, "+str(y)+")")
-				y += 1000  
+				self.sel_driver.execute_script("document.getElementById('search-results-container').scrollTop = "+str(y))
+				y += 1000 
 				time.sleep(1)
 
-			divs = self.sel_driver.find_elements_by_class_name('result-lockup__name')
+			divs = self.sel_driver.find_elements_by_class_name('artdeco-entity-lockup__title')
 
 			for div in divs:
 				url = div.find_element_by_css_selector('a').get_attribute('href')
 				self.profile_urls.append(url)
+				print(url, idx)
 
-			print(idx)
 			button = None
-
+			
 			try:
-				button = self.sel_driver.find_element_by_xpath('//button[@data-page-number="{}"]'.format(idx))
+				button = self.sel_driver.find_element_by_xpath('//li[@data-test-pagination-page-btn="{}"]/button'.format(idx))
 			except:
 				break
 
-			if idx >= 2:
-				break
-
 			button.click()
+
+
 			time.sleep(3)
 			print("# Profiles", len(self.profile_urls))
 			idx += 1
@@ -133,15 +136,23 @@ class Driver:
 
 	def scrape_profiles(self, profile_urls, profile_idx):
 		self.login()
+		print("URLS:", profile_urls[0])
 		for idx, prof_url in enumerate(profile_urls):
 			print("INDEX", idx)
 			if idx < profile_idx:
 				continue
-			if idx >= (profile_idx + 2):
+			if idx >= (profile_idx + 250):
 				break
 			print("PROFILE {}".format(idx))
 			self.sel_driver.get(prof_url)
-			name_div = self.sel_driver.find_element_by_xpath('.//span[@class = "profile-topcard-person-entity__name t-24 t-black t-bold"]')
+			time.sleep(3)
+			print(prof_url)
+			name_div = None
+			try:
+				name_div = self.sel_driver.find_element_by_xpath('.//span[@class = "profile-topcard-person-entity__name t-24 t-black t-bold"]')
+			except:
+				print("couldn't find!")
+				break #Profile viewing limit exceeded
 			name = name_div.text
 			print("Name", name)
 
@@ -194,21 +205,25 @@ class Driver:
 			except:
 				company_div = self.sel_driver.find_element_by_xpath('.//span[@class = "t-14 t-black t-bold"]')
 				company_text = company_div.text
-
 			industry, num_employees, comp_city, comp_state = "","","",""
+			print("COMPANY LINK", company_text, company_link)
 			if company_link != "":
 				self.sel_driver.get(company_link)
-				time.sleep(1.5)
+				time.sleep(2.5)
 				industry_div = self.sel_driver.find_element_by_xpath('.//div[@class = "t-14"]')
 				industry_raw = industry_div.text
-				industry = industry_raw.split("·")[0]
-
+				print(industry_raw)
+				industry = ' '.join(industry_raw.split(" ")[0:2])
 				num_employees_div = self.sel_driver.find_element_by_xpath('.//a[@class = "ember-view link-without-visited-and-hover-state"]')
 				is_thousand = "K" in num_employees_div.text
 
 				num_employees = float(re.sub("[^\d.]+", "", num_employees_div.text))
 				if is_thousand: num_employees *= 1000
 				num_employees = int(num_employees)
+				
+				print("Company Info", company_link + " " + company_text + " "
+				+ industry + " " + str(num_employees) + " " + comp_city + ", " + comp_state)
+
 				comp_loc_div = self.sel_driver.find_element_by_xpath('.//div[@class = "t-12 t-black--light"]')
 				comp_loc = comp_loc_div.text
 				comp_city, comp_state = "", ""
@@ -216,6 +231,9 @@ class Driver:
 					text = comp_loc.split(",")
 					comp_city = text[0]
 					comp_state = text[1]
+				
+				print("Company Info", company_link + " " + company_text + " "
+				+ industry + " " + str(num_employees) + " " + comp_city + ", " + comp_state)
 
 
 			print("Company Info", company_link + " " + company_text + " "
@@ -253,7 +271,7 @@ class Driver:
 		self.VERIFY_KEY = VERIFY_KEY
 
 	def verify_emails(self):
-		print("CALLED")
+		print("Verifying")
 		names = self.profiles_data["Name"]
 		companies = self.profiles_data["Current Company"]
 		#Rocket Reach - Email Lookup
