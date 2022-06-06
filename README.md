@@ -1,13 +1,39 @@
 # leadscraper
 LinkedIn Sales Navigator - Lead List Scraper
 
+Flask + Selenium, client-side version
+
 ## Installation
+Run from root directory
 ```
 python venv env
 source env/bin/activate
 pip install -r requirements.txt
 ```
 
+## Usage
+Run from root directory. 
+```
+python3 api/api.py
+```
+
+## Flow
+1) Input Sales Nav credentials into login page. 
+2) Input lead list url into page 2. Download the form data consisting of profile urls when done scraping. 
+3) Input form data along with start index (LinkedIn only allows ~350 profile views a day). Output is a excel spreadsheet with profile + company data. There's inputs for rocket reach API key and verify-email API key that are prefilled, might want to change that or abstract away. 
+
+## Note on EC2 Usage
+If you do want to try web hosting on EC2, uncomment the following 2 lines in driver.py/login
+```
+##chrome_options.add_argument('--headless')
+##driver = webdriver.Chrome(options=chrome_options,executable_path="/usr/bin/chromedriver")
+```
+and comment the following line
+```
+driver = webdriver.Chrome(options=chrome_options,executable_path="./chromedriver")
+```
+
+-----------------------------------DEPRECATED-------------------------------------------------------------
 ## Usage
 ```
 python TestScraper.py CONFIG_PATH LEAD_LIST_LINK PROFILE_LIST_PATH EXCEL_PATH PARSE_START OUTPUT_PROFILE_DATA_PATH ROCKET_API_KEY VERIFY_API_KEY

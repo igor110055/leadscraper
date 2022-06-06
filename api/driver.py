@@ -59,10 +59,12 @@ class Driver:
 		self.VERIFY_KEY = None
 	
 	def store_login(self, user, pw):
+		"""Store login creds"""
 		self.user = user
 		self.pw = pw
 
 	def login(self):
+		"""Login to Sales Navigator. Uses the stored login (user, pw) with selenium. """
 		chrome_options = webdriver.ChromeOptions()
 		chrome_options.add_argument("--start-maximized")
 		chrome_options.add_argument("--disable-gpu")
@@ -91,6 +93,9 @@ class Driver:
 		return self.user, self.pw
 
 	def get_profile_urls(self, list_link):
+		"""Scrape profile urls from lead list.
+		Input: List_Link - url to saved lead list.
+		Output: profile_urls - saved profile urls """
 		print(self.login())
 		print("Parsing URLs")
 		self.list_link = list_link
@@ -135,6 +140,9 @@ class Driver:
 		return "Finished"
 
 	def scrape_profiles(self, profile_urls, profile_idx):
+		"""Scrape profile-level data (user info, company info). 
+		Input: profile_urls (output of get_profile_urls)
+		Output: profiles_data - pandas df of scraped profile data"""
 		self.login()
 		print("URLS:", profile_urls[0])
 		for idx, prof_url in enumerate(profile_urls):
@@ -271,6 +279,8 @@ class Driver:
 		self.VERIFY_KEY = VERIFY_KEY
 
 	def verify_emails(self):
+		"""Email Lookup + Verification using RocketReach and VerifyEmail. 
+		Output: profiles_data - pandas df of updated profile data with email & verification status"""
 		print("Verifying")
 		names = self.profiles_data["Name"]
 		companies = self.profiles_data["Current Company"]
